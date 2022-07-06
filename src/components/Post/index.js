@@ -1,10 +1,31 @@
-import React, { useState } from 'react'
-import { View, Text, SafeAreaView, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { View, Text, SafeAreaView, StyleSheet, Dimensions, TouchableWithoutFeedback, Image, ActivityIndicator } from 'react-native'
 import Video from 'react-native-video';
+import Entypo from 'react-native-vector-icons/Entypo'
+import AntDesign from 'react-native-vector-icons/AntDesign'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import Fontisto from 'react-native-vector-icons/Fontisto'
 
 const Post = () => {
 
     const [status, setStatus] = useState(false);
+
+    const ip = '192.168.1.6';
+
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`http://${ip}:3000/video`)
+            .then(response => response.json())
+            .then(responseJson => {
+                responseJson.map((video) => {
+                    setData(video.data.videos);
+                })
+            })
+            .catch(err => console.error(err))
+            .finally(() => setIsLoading(false));
+    }, [])
 
     const handlePlayPause = () => {
         setStatus(!status);
@@ -12,18 +33,59 @@ const Post = () => {
 
     return (
         <SafeAreaView>
-            <View style={styles.container}>
-                <TouchableWithoutFeedback onPress={handlePlayPause}>
-                    <Video
-                        source={{ uri: 'https://v16-webapp.tiktok.com/938bc2e656c505023ac741340590eeac/62b20e7d/video/tos/useast2a/tos-useast2a-pve-0037-aiso/ef4c68d43eb947f7bba3c8f6e42f4e0d/?a=1988&ch=0&cr=0&dr=0&lr=tiktok&cd=0%7C0%7C1%7C0&cv=1&br=2776&bt=1388&btag=80000&cs=0&ds=3&ft=eXd.6Hk_Myq8Zi4xZwe2NAuQml7Gb&mime_type=video_mp4&qs=0&rc=ZTpmaWk2ZGY3ZDs1ZjxlZEBpMzpkcWk6Zmh1ZDMzZjgzM0AzNTEzMzYyNi4xYi42Xi80YSMuaWItcjQwampgLS1kL2Nzcw%3D%3D&l=20220621123115010245057184270C7DC2' }}
-                        style={styles.video}
-                        resizeMode={'cover'}
-                        repeat={true}
-                        paused={status}
-                    />
-                </TouchableWithoutFeedback>
+            {isLoading ? (
+                <ActivityIndicator />
+            ) : (
+                <View style={styles.container}>
+                    <TouchableWithoutFeedback onPress={handlePlayPause}>
+                        <Video
+                            source={{ uri: data[0].play }}
+                            style={styles.video}
+                            resizeMode={'cover'}
+                            repeat={true}
+                            paused={status}
+                        />
+                    </TouchableWithoutFeedback>
+                    <View style={styles.uiContainer}>
+                        <View style={styles.rightContainer}>
+                            <View style={styles.profilePictureContainer}>
+                                <Image
+                                    style={styles.profilePicuter}
+                                    source={{ uri: data[0].author.avatar }}
+                                />
+                            </View>
 
-            </View>
+                            <View style={styles.iconContainer}>
+                                <AntDesign name={'heart'} size={35} />
+                                <Text style={styles.statsLabel}>{data[0].digg_count}</Text>
+                            </View>
+                            <View style={styles.iconContainer}>
+                                <FontAwesome name={'commenting'} size={35} />
+                                <Text style={styles.statsLabel}>{data[0].comment_count}</Text>
+                            </View>
+                            <View style={styles.iconContainer}>
+                                <Fontisto name={'share-a'} size={35} />
+                                <Text style={styles.statsLabel}>{data[0].share_count}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.bottomContainer}>
+                            <View>
+                                <Text style={styles.handle}>
+                                    @{data[6].author.nickname}
+                                </Text>
+                                <Text style={styles.description}>
+                                    {data[6].title}
+                                </Text>
+                                <View style={styles.songRow}>
+                                    <Entypo name={'beamed-note'} size={24} />
+                                    <Text numberOfLines={1} style={styles.songName}>{data[0].music_info.title}</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     )
 }
@@ -40,6 +102,54 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         height: Dimensions.get('window').height,
+    },
+    uiContainer: {
+        height: '100%',
+        justifyContent: 'flex-end',
+    },
+    rightContainer: {
+        alignSelf: 'flex-end',
+        height: 300,
+        justifyContent: 'space-between',
+        marginRight: 5,
+        marginBottom: 30,
+    },
+    bottomContainer: {
+        padding: 10,
+    },
+    handle: {
+        marginBottom: 10,
+        fontSize: 16,
+        fontWeight: '700'
+    },
+    description: {
+        marginBottom: 10,
+        fontSize: 16,
+        fontWeight: '300'
+    },
+    songRow: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    songName: {
+        marginLeft: 5,
+        fontSize: 16,
+        width: '50%'
+    },
+    profilePicuter: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: '#fff'
+    },
+    iconContainer: {
+        alignItems: 'center'
+    },
+    statsLabel: {
+        fontSize: 16,
+        fontWeight: '700',
+        marginTop: 5,
     }
 })
 
